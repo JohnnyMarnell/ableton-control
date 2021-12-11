@@ -6,7 +6,7 @@ class AbletonPythonResticleResource:
 
     def add_routes(self, server):
         ok = {'ok': True}
-        server.add_route('GET', '/tempo', lambda p, h: {'tempo': self.song.tempo}, 'GET')
+        server.add_route('GET', '/tempo', lambda p, h: {'tempo': self.song.tempo})
 
         server.add_route('POST', '/tempo/{bpm}', lambda p, h: self.set_tempo(float(p['bpm'])))
 
