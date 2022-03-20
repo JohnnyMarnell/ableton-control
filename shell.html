@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style> body { font-family: Verdana, Helvetica, Arial, sans-serif; } </style>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+</head>
+<body>
+<h4>HTML Python Interpreter</h4>
+<h5>Result:</h5>
+<pre id="result">Pending command...</pre>
+<div id="editor" style="width:800px;height:600px;border:1px solid grey"></div>
+<h5>State:</h5>
+<pre id="state"></pre>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="text/javascript" src="https://unpkg.com/monaco-editor@0.31.1//min/vs/loader.js"></script>
+<script>
+    async function submit() {
+		resultContainer.innerHTML = 'Running...'
+		let result
+        try {
+			const body = { command: vsEditor.getModel().getLinesContent().join('\n') }
+			const response = await (await fetch(`http://localhost:8080/run`, {
+				method: 'POST', body: JSON.stringify(body)})).json()
+			result = response.output || 'OK empty'
+        } catch (e) {
+            result = e.toString()
+        }
+		resultContainer.innerHTML = ''
+        resultContainer.appendChild(document.createTextNode(result))
+    }
+
+    let vsEditor, metaDown = false,
+        editor = document.getElementById('editor'),
+        resultContainer = document.getElementById('result'),
+		stateContainer = document.getElementById('state')
+    editor.addEventListener('keyup', async e => (metaDown = e.key === 'Meta' ? false : metaDown))
+    editor.addEventListener('keydown', async e => {
+        metaDown = e.key === 'Meta' ? true : metaDown
+		if (metaDown && (e.key === '\\' || e.key === 'Enter')) {
+			e.preventDefault()
+			await submit()
+		}
+    })
+	
+    require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@0.31.1//min/vs' }})
+	require(['vs/editor/editor.main'], () => {
+        vsEditor = monaco.editor.create(editor, {
+            value: '# python\nprint("Hello world!")',
+            language: 'python'
+        })
+    })
+
+	setInterval(async () => {
+		stateContainer.innerText = JSON.stringify(await (await fetch(`http://localhost:8080/state`)).json(), null, 2)
+	}, 300)
+</script>
+</body>
+</html>

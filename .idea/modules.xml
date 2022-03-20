@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ableton-resticle.iml" filepath="$PROJECT_DIR$/.idea/ableton-resticle.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ableton-control.iml" filepath="$PROJECT_DIR$/ableton-control.iml" />
     </modules>
   </component>
 </project>
