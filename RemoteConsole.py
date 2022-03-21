@@ -22,8 +22,7 @@ class RemoteConsole:
         self.server_socket.setblocking(False)
         self.welcome = welcome
         self.listening = False
-        if log:
-            self.log = types.MethodType(log, self)
+        self.log = types.MethodType(log or self.log, self)
         if listen:
             self.listen()
         self.log('Initializing RemoteConsole on port', port)

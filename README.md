@@ -41,3 +41,21 @@ one directory above, as the Python module symlinks in this repo, `ableton` and `
 | [AbletonPythonRestResource](./AbletonPythonRestResource.py) | REST Resource implementing a collection of routes to control and introspect Ableton Live (e.g. `/play`, `/tempo/{bpm}`)
 | [SimpleRestServer](./SimpleRestServer.py)                   | Basic, unoptimized impl of a non-blocking-Socket backed, `.tick()` based approach to HTTP / REST server, so that Ableton Live can run it. Leverages regular expression groups for quick and dirty route defining.
 | [RemoteConsole](./RemoteConsole.py)                         | Leverage Python's code package's [InteractiveConsole](https://docs.python.org/3/library/code.html) to impl REPL functionality. (Supports telnet as wellnet). Hijacks `stdout` so results can be returned. 
+
+### Small Sample of API via Curl
+```bash
+$ curl -XGET localhost:8080/state
+# { ... } # lots of data, tracks, names, other state...
+$ curl -XPOST localhost:8080/play
+# {"ok": true}
+$ curl -XPOST localhost:8080/stop
+# {"ok": true}
+$ curl -XGET  localhost:8080/tempo
+# {"tempo": 120.0}
+$ curl -XPOST localhost:8080/play
+# {"ok": true}
+$ curl -XPOST localhost:8080/tempo/150
+# {"tempo": 150.0}
+$ curl -XPOST localhost:8080/stop
+# {"ok": true}
+```

@@ -23,7 +23,7 @@ class AbletonControl:
             self.console = RemoteConsole(ctx=context, listen=shell, port=shell_port, log=log)
         
         self.rest_server = SimpleRestServer(listen=self.rest, port=rest_port, log=log)
-        self.resource = AbletonPythonRestResource(c_instance)
+        self.resource = AbletonPythonRestResource(c_instance, log=log)
         self.resource.add_routes(self.rest_server)
         if rest_commands:
             self.resource.add_console_route(self.rest_server, self.console)

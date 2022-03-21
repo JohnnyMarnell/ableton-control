@@ -1,14 +1,16 @@
 """ Implementing a few routes as examples """
-import Live, time, collections
+import Live, time, collections, types
 
 Event = collections.namedtuple('Event', 'type val desc time data')
 EMPTY_EVENT = Event(type='any', val={}, desc='Empty', time=0.0, data={})
 
+
 class AbletonPythonRestResource:
-    def __init__(self, c_instance):
+    def __init__(self, c_instance, log=None):
         self.c_instance = c_instance
         self.song = c_instance.song()
         self.application = Live.Application.get_application()
+        self.log = types.MethodType(log or self.log, self)
         self.events = []
 
     def add_routes(self, server):
@@ -21,7 +23,10 @@ class AbletonPythonRestResource:
         server.add_route('POST', '/event', lambda req: self.add_event(**req['body']))
         server.add_route('POST', '/play', lambda req: self.song.start_playing() or ok)
         server.add_route('POST', '/stop', lambda req: self.song.stop_playing() or ok)
-    
+        server.add_route('POST', '/play/toggle',
+                         lambda req: (self.song.stop_playing() if self.song.is_playing
+                                      else self.song.start_playing()) or ok)
+
     def add_console_route(self, server, console):
         def run_cmd(cmd):
             incomplete, output, buffer = console.run_cmd_with_default_interpreter(cmd)
@@ -69,5 +74,8 @@ class AbletonPythonRestResource:
         event = EMPTY_EVENT._replace(time=time.time(), **kwargs)
         self.events = [e for e in self.events if e.type != event.type and e.time >= event.time - 10.0]
         self.events.append(event)
+
+    def log(self, *args):
+        print(*args)
 
     # etc, etc

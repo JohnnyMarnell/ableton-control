@@ -1,0 +1,32 @@
+<!DOCTYPE html><html><head>
+	<style> body { font-family: Verdana, Helvetica, Arial, sans-serif; }
+	        #time { font-family: Roboto, monospace; } </style>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+</head><body>
+<h4>Simple Ableton HTTP Demo</h4>
+<button id="play">Play!</button> <span id="time">00:00.000</span> <br>
+<label for="tempo">Tempo <span id="bpm">120</span> bpm</label><br>
+<input id="tempo" type="range" min="70" max="200" value="120" step="1">
+</body><script>
+let tempo = 120
+const get = async path => (await fetch(`http://localhost:8080${path}`)).json(),
+	post = async (path, data) => (await fetch(`http://localhost:8080${path}`,
+		{method: 'POST', body: JSON.stringify(data || {})})).json(),
+	play = document.getElementById('play'),
+	tempoRange = document.getElementById('tempo')
+play.addEventListener('click', e => post('/play/toggle'))
+tempoRange.addEventListener('input', e => tempo = parseInt(e.target.value))
+setInterval(async () => {
+	const state = await get('/state')
+	if (parseInt(state.tempo) !== parseInt(tempo))
+		post(`/tempo/${parseInt(tempo)}`)
+	play.innerText = state.playing ? 'STOP.' : 'Play!'
+	tempoRange.value = tempo
+	document.getElementById('bpm').innerText = tempo
+	const millis = state.current_song_time / (state.tempo / 60.0) * 1000.0
+	document.getElementById('time').innerText = ''
+		+ Math.floor(millis / 60000).toString().padStart(2, '0') + ':'
+		+ Math.floor((millis / 1000) % 60).toString().padStart(2, '0') + '.'
+		+ Math.floor(millis % 1000).toString().padStart(3, '0')
+}, 100)
+</script></html>

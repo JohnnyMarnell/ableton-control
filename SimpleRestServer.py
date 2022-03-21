@@ -9,7 +9,8 @@ class SimpleRestServer:
      Simple REST server implementation, uses non-blocking socket + tick loop approach, so
      it works with Ableton's embedded Python via Remote Scripts
     """
-    def __init__(self, port=8080, bind_address='0.0.0.0', listen=True, cors_all=True, log=None):
+    def __init__(self, port=8080, bind_address='0.0.0.0', listen=True, cors_all=True, log=None,
+                 access_log=False):
         self.port = port
         self.bind_address = bind_address
         self.listening = False
@@ -18,6 +19,7 @@ class SimpleRestServer:
         self.server_socket.setblocking(False)
         self.routes = []
         self.cors_all = cors_all
+        self.access_log = access_log
         if log:
             self.log = types.MethodType(log, self)
         if listen:
@@ -25,14 +27,23 @@ class SimpleRestServer:
 
     """ Leverage RegEx named groups for quick and dirty REST path parameters """
     def add_route(self, method, path, handler):
+        if path[-1] == '/' and len(path) > 1:
+            path = path[0:-1]
         pattern = re.compile(r'/\{([^}]+)\}').sub(r'/(?P<\1>[^/]+)', path)
-        self.routes.append(Route(method, re.compile(pattern), handler))
+        self.routes.append(Route(method, re.compile('^' + pattern + '$'), handler))
         self.log('Added route:', method, path)
 
     """ Parse HTTP request (path, headers, etc), find route and dispatch """
     def serve_request(self, request):
         lines = request.split('\n')
         method, path, scheme = lines[0].split(' ')
+        query_string = None
+        query_start = path.find('?')
+        if query_start >= 0:
+            query_string = path[query_start + 1:]
+            path = path[0:query_start]
+        if path[-1] == '/' and len(path) > 1:
+            path = path[0:-1]
         if method == 'OPTIONS' and self.cors_all:
             return 'HTTP/1.0 204 OK\n' + \
                    'Access-Control-Allow-Origin: *\n' + \
@@ -64,6 +75,11 @@ class SimpleRestServer:
                             'headers': headers,
                             'body': body
                         })
+                        if self.access_log:
+                            self.log(method, route.pattern)
+                            self.log(json.dumps(match.groupdict()))
+                            self.log(json.dumps(headers))
+                            self.log(json.dumps(body))
                         res = 'HTTP/1.0 200 OK\n'
                         if self.cors_all:
                             res += 'Access-Control-Allow-Origin: *\n'
